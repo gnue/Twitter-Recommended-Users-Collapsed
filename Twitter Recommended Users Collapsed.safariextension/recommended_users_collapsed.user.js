@@ -13,6 +13,7 @@
 //   * Mac OS 10.6 でのみ確認
 //
 // 更新履歴
+//   [2010-10-06] 1.1.1	新Web UIのコードをリファクタリング、リトライ回数を5→20に変更
 //   [2010-10-03] 1.1	新Web UIに対応
 //   [2010-08-14] 1.0	最初のリリース
 
@@ -47,21 +48,41 @@ if (recommended_users)
 
 
 // 新Web UI
-var try_count = 5;
-var delay = 1000;
-setTimeout(wtf_hidden, delay);
+hidden_dashboard_component('wtf-inner', 1000, 20);
 
-function wtf_hidden()
+
+function dashboard_component(func, delay, try_count)
 {
-	var wtf_inner = document.getElementsByClassName('wtf-inner');
-
-	if (0 < wtf_inner.length)
+	function component()
 	{
-		var wtf = wtf_inner[0].parentNode;
-		wtf.style.display = 'none';
+		if (! func())
+		{	// 実行できなかった
+			if (try_count--)
+			{	// try_count だけ再チャレンジ
+				setTimeout(component, delay);
+			}
+		}
 	}
-	else if (try_count--)
-	{	// try_count だけ再チャレンジ
-		setTimeout(wtf_hidden, delay);
+
+	component();
+}
+
+
+function hidden_dashboard_component(className, delay, try_count)
+{
+	function hidden_component()
+	{
+		var inner = document.getElementsByClassName(className);
+
+		if (0 < inner.length)
+		{
+			var node = inner[0].parentNode;
+			node.style.display = 'none';
+			return true;
+		}
+
+		return false;
 	}
+
+	dashboard_component(hidden_component, delay, try_count);
 }
